@@ -2,14 +2,13 @@ import api
 from kiteconnect import KiteConnect
 
 orders = []
-kite = KiteConnect(api_key="ge1fsvh1bto8z2os")
 
 
 def main():
     user_input = int(create_menu())
     if user_input == 1:
         instrument_input = take_view_price_input()
-        instrument, flag = api.view_price_kite_api(kite, instrument_input['stock'])
+        instrument, flag = api.view_price_kite_api(instrument_input['stock'])
         if instrument:
             order = take_place_order_input({'stock': flag})
             order_obj = Order(stock=order['stock'],
@@ -42,7 +41,7 @@ class Order:
         order.status = status
 
     def __str__(order):
-        return ''''
+        return '''
             Stock -> %s
             Strike Price -> %s
             Option -> %s
@@ -86,7 +85,7 @@ def insert_order_queue(order):
 
 
 def order_place(order):
-    current_price, flag = api.view_price_kite_api(kite, order.stock)
+    current_price, flag = api.view_price_kite_api(order.stock)
     print(current_price)
     if validation_order_place(order.entry_price, current_price, order.sl, order.target) ==  False:
         print("INFO: Sorry!! Your Order is not placed.")
@@ -94,8 +93,9 @@ def order_place(order):
 
     if order.entry_price - current_price <= 10:
         # Todo : Commenting For Now
-        api.order_place_kite_api(kite, order)
-        insert_order_queue(order)
+        response = api.order_place_kite_api(order)
+        if response:
+            insert_order_queue(order)
         return
 
 
@@ -135,7 +135,6 @@ def create_menu():
 if __name__ == "__main__":
     # data = kite.generate_session("tDa8BTnzSAEgJ0w3NZxFampVxBbHZoVr", api_secret="3f4sbjxkpxf2thpl5qcvvj05vde5egxp")
     # print(data["access_token"],'TOEKN\n\n\n')
-    kite.set_access_token('5tIBfhchSRU6qJ2VuqARqQyraP3cT70s')
     main()
 
 
