@@ -2,7 +2,7 @@ import api
 import uuid
 orders = []
 class Order():
-     def __init__(order, stock, strike_price, option, quantity, entry_price, target, sl, instrument, status='pending', id=''):
+    def __init__(order, stock, strike_price, option, quantity, entry_price, target, sl, instrument, status='pending', buy_id="", sell_id=""):
         order.stock = stock
         order.strike_price = strike_price
         order.option = option
@@ -12,7 +12,8 @@ class Order():
         order.sl = sl
         order.instrument = instrument
         order.status = status
-        order.id = id or uuid.uuid4()
+        order.buy_id = buy_id or str(uuid.uuid4())
+        order.sell_id = sell_id
 
 order = Order('INFY' ,25, 'PE', 25, 300, 320, 280, 'INFY', 'PENDING')
 orders.append(order)
