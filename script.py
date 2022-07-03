@@ -29,7 +29,7 @@ def main():
         main()
 
 class Order:
-    def __init__(order, stock, strike_price, option, quantity, entry_price, target, sl, raw_tradingsymbol, status='pending'):
+    def __init__(order, stock, strike_price, option, quantity, entry_price, target, sl, instrument, status='pending', id=''):
         order.stock = stock
         order.strike_price = strike_price
         order.option = option
@@ -37,11 +37,13 @@ class Order:
         order.entry_price = entry_price
         order.target = target
         order.sl = sl
-        order.raw_tradingsymbol = raw_tradingsymbol
+        order.instrument = instrument
         order.status = status
+        order.id = id
 
     def __str__(order):
         return '''
+            ID -> %s
             Stock -> %s
             Strike Price -> %s
             Option -> %s
@@ -50,7 +52,9 @@ class Order:
             Target -> %s
             Stop Loss -> %s
             Status -> %s
-        '''
+            Instrument -> %s
+        ''' % (order.id, order.stock, order.strike_price, order.option, 
+        order.quantity, order.entry_price, order.target, order.sl, order.status, order.instrument)
 
 
 def validation_order_place(entry_price, current_price, sl, target):
