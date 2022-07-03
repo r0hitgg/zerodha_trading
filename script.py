@@ -1,4 +1,4 @@
-import logging
+import api
 from kiteconnect import KiteConnect
 
 orders = []
@@ -9,10 +9,18 @@ def main():
     user_input = int(create_menu())
     if user_input == 1:
         instrument_input = take_view_price_input()
-        instrument = view_price_kite_api(instrument_input['stock'])
+        instrument, flag = api.view_price_kite_api(kite, instrument_input['stock'])
         if instrument:
-            order = take_place_order_input(instrument)
-            order_obj = Order(order)
+            order = take_place_order_input({'stock': flag})
+            order_obj = Order(stock=order['stock'],
+                strike_price=instrument_input['strike_price'],
+                raw_tradingsymbol=instrument_input['stock'],
+                option=instrument_input['option'],
+                quantity=order['quantity'],
+                entry_price=order['entry_price'],
+                target=order['target'],
+                sl=order['sl'],
+            )
             order_place(order_obj)
         else:
             main()
@@ -22,7 +30,7 @@ def main():
         main()
 
 class Order:
-    def __init__(order, stock, strike_price, option, quantity, entry_price, target, sl, status):
+    def __init__(order, stock, strike_price, option, quantity, entry_price, target, sl, raw_tradingsymbol, status='pending'):
         order.stock = stock
         order.strike_price = strike_price
         order.option = option
@@ -30,6 +38,7 @@ class Order:
         order.entry_price = entry_price
         order.target = target
         order.sl = sl
+        order.raw_tradingsymbol = raw_tradingsymbol
         order.status = status
 
     def __str__(order):
@@ -77,30 +86,17 @@ def insert_order_queue(order):
 
 
 def order_place(order):
-
-    current_price = view_price_kite_api(order.stock)
-
+    current_price, flag = api.view_price_kite_api(kite, order.stock)
+    print(current_price)
     if validation_order_place(order.entry_price, current_price, order.sl, order.target) ==  False:
         print("INFO: Sorry!! Your Order is not placed.")
         return
 
     if order.entry_price - current_price <= 10:
         # Todo : Commenting For Now
-        # order_place_kite_api(order)
+        api.order_place_kite_api(kite, order)
+        insert_order_queue(order)
         return
-
-    insert_order_queue(order)
-
-
-def order_place_kite_api(order):
-    order_id = kite.place_order(tradingsymbol=order.stock,
-                                exchange=kite.EXCHANGE_NFO,
-                                transaction_type=kite.TRANSACTION_TYPE_BUY,
-                                quantity=order.quantity,
-                                variety=kite.VARIETY_REGULAR,
-                                order_type=kite.ORDER_TYPE_LIMIT,
-                                product=kite.PRODUCT_MIS,
-                                validity=kite.VALIDITY_DAY)
 
 
 def take_view_price_input():
@@ -109,29 +105,19 @@ def take_view_price_input():
     strike_price = input('Enter Strice Price -> ')
     ce = input('Enter CE/PE -> ')
     return {
-        'stock': str('NIFTY' if op_type == 'n' else 'BANKNIFTY') + str(flag) + str(strike_price) + str(ce).upper()
+        'stock': str('NIFTY' if op_type == 'n' else 'BANKNIFTY') + str(flag) + str(strike_price) + str(ce).upper(),
+        'op_type': op_type,
+        'strike_price': strike_price,
+        'option': ce,
+        'flag': flag
     }
 
 def take_place_order_input(instrument):
-    instrument['strike_price'] = input('Enter Strike Price -> ')
-    instrument['option'] = input('Enter Option -> ')
-    instrument['quantity'] = input('Enter Quantity -> ')
-    instrument['entry_price'] = input('Enter Entry Price -> ')
-    instrument['target'] = input('Enter Target -> ')
-    instrument['sl'] = input('Enter Sl -> ')
+    instrument['quantity'] = int(input('Enter Quantity -> '))
+    instrument['entry_price'] = int(input('Enter Entry Price -> '))
+    instrument['target'] = int(input('Enter Target -> '))
+    instrument['sl'] = int(input('Enter Sl -> '))
     return instrument
-
-
-def view_price_kite_api(instrument):
-    try:
-        token = 'NFO:%s' % instrument
-        res = kite.quote([token])
-        print('Current Price For %s Is %s' % (token, res.get(token).get('last_price')))
-        return res.get(token).get('last_price')
-    except:
-        print('Error: Can Not Get Price For %s' % token)
-        print(res)
-        return False
 
 
 def create_menu():
@@ -147,7 +133,9 @@ def create_menu():
 
 
 if __name__ == "__main__":
-    kite.set_access_token('MI0WjCvsPeFpkWBKH7V8Du95kZBwgo06')
+    # data = kite.generate_session("tDa8BTnzSAEgJ0w3NZxFampVxBbHZoVr", api_secret="3f4sbjxkpxf2thpl5qcvvj05vde5egxp")
+    # print(data["access_token"],'TOEKN\n\n\n')
+    kite.set_access_token('5tIBfhchSRU6qJ2VuqARqQyraP3cT70s')
     main()
 
 
